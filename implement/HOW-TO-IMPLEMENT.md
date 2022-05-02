@@ -22,5 +22,20 @@ Once we have the git bash console in the new directory along all the files and f
 $ npm init -y
 $ npm i express socket.io nodejs nodemon
 ```
-That's it! You are ready to deploy on localhost:3000, this means that only your device can see it at the moment. To deploy for other interfaces in THE SAME LOCAL NETWORK, edit the server.js file on line
-
+That's it! You are ready to deploy on localhost:3000, this means that only your device can see it at the moment. To deploy for other interfaces in THE SAME LOCAL NETWORK, edit the server.js file on line 141:
+```sh
+http.listen(3000, "INSERT YOUR IPv4 ADDRESS HERE WITHIN QUOTATION", () => {
+    console.log('server live for your_ip_adress:3000')
+})
+```
+You can find your IPv4 address with Windows CMD and type 'ipconfig', mine was 192.168.15.4 and so my code would look like:
+```sh
+http.listen(3000, "192.168.15.4", () => {
+    console.log('server live for 192.168.15.4:3000')
+})
+```
+Once you are ready with the configurations, go to the git bash and type (still same directory):
+```sh
+$ nodemon server.js
+```
+NOW you can access the webapplication on 192.168.15.4:3000 for example.
