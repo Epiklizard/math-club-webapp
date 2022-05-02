@@ -15,4 +15,4 @@ Once we are in /Desktop or wherever, type in:
 ```sh
 $ git clone https://github.com/Epiklizard/math-club-webapp
 ```
-and you should have a folder 'math-club-webapp' on your current directory, navigate yourself into math-club-webapp/implement/
+and you should have a folder 'math-club-webapp' on your current directory, navigate yourself into math-club-webapp/implement/ and you'd have the all the files needed to start the application
