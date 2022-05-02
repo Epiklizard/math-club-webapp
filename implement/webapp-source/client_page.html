@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <!-- <script src="/socket.io/socket.io.js"></script> -->
+    <script src="public/js/socket.io.js"></script>
+
+    <!--For iink.js-->
+    <link rel="stylesheet" href='public/css/math.css'>
+    <link rel="stylesheet" href='public/css/my.css'>
+    <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
+    <script type="text/javascript" src="public/iink.min.js"></script>
+
+    <!--Katex Import-->
+    <link rel="stylesheet" href="public/css/katex.min.css">
+    <script defer src="public/js/katex.min.js"></script>
+    <script defer src="public/js/auto-render.min.js" 
+    onload="renderMathInElement(document.body);"></script>
+
+    <!--MathJax-->
+    <!-- <script src="https://polyfill.io/v3/polyfill.js?features=es6"></script> -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+      </script>
+    <script src="public/js/tex-chtml.js" id="MathJax-script"></script>
+
+    <!--Audio-->
+    <script>
+      var game_audio = new Audio('public/CR-10s-2.mp3');
+    </script>
+  </head>
+
+
+  <body>
+    <h1>M-Comp App. test.ver 280422 MVP INCLUDING-ext-JSON-imp</h1>
+
+    <h3 id="username_h3">Username?</h3>
+    <form id="form" action="">
+      <input id="input" type="text">
+      <button id="user_button">Send</button>
+    </form> 
+    <h3 id='total_player' hidden>Total Players</h3>
+    <p id="users_stream"></p>
+    
+ 
+
+    <h2 id="scoreboard">Point Scoreboard</h2>
+    <ul id="score_stream"></ul>
+
+
+    <!--Elements for iink.js-->
+    <svg>
+      <symbol id="icn-play" viewBox="0 0 16 16">
+        <path d="M13.153 8.589c.606-.325.603-.854 0-1.178L4.873 2.97C4.392 2.709 4 2.945 4 3.496v9.008c0 .55.39.787.874.527l8.28-4.442z" 
+        fill="currentColor" 
+        fill-rule="evenodd">
+        </path></symbol>
+    </svg>
+
+    <p id="question"></p>
+    <div id="result"></div>
+    <div id= 'nextDiv' class="nextOne"></div>
+
+    <div id="export-result"></div>
+
+    <div>
+      <nav id="edit_bar">
+        <div class="button-div">
+          <button id="clear" class="nav-btn btn-fab-mini btn-lightBlue" disabled>
+            <img src="public/clear.svg">
+          </button>
+          <button id="undo" class="nav-btn btn-fab-mini btn-lightBlue" disabled>
+            <img src="public/undo.svg">
+          </button>
+          <button id="redo" class="nav-btn btn-fab-mini btn-lightBlue" disabled>
+            <img src="public/redo.svg">
+          </button>
+        </div>
+        <div class="spacer"></div>
+        <button class="classic-btn" id="exportContent" disabled>Export</button>
+      </nav>
+      <div id="editor"></div>
+    </div>
+
+    <!--For changing question border colour when someone gets correct-->
+    <style>
+      #question {
+        border: 5px solid;
+        border-color: lightblue;
+      }
+    </style>
+
+
+    <script>
+      // Just local
+      const socket = io();
+      
+        
+      //generic chat getElements
+      let user_h3 = document.getElementById('username_h3');
+      let users_stream = document.getElementById('users_stream')
+      let new_user_form = document.getElementById('form');
+      let input = document.getElementById('input');
+      let user_new_button = document.getElementById('user_button');
+        
+      //Math Next Questions getElements
+      let next_question = document.getElementById('next_question')
+
+      //Math Questions Answers getElements
+      let stream = document.getElementById('score_stream')
+
+
+      const return_username = async () => {
+        return new Promise((res, rej) => {
+          socket.emit('req-username', {
+          user_id: socket.id
+          });
+          socket.on('req-username', data => {
+          console.log(data)
+          res(data)
+          })
+        })
+      }
+        
+        
+      new_user_form.addEventListener('submit', function(i) {
+        // prevent form submission refreshing page
+        i.preventDefault();
+        socket.emit('new-user', {
+          user_id: socket.id, 
+          user: input.value
+        });
+        // Hide new_user inputs to prevent spamming
+        user_h3.setAttribute("hidden", "hidden");
+        input.type = 'hidden';
+        user_new_button.setAttribute("hidden", "hidden");
+
+        socket.emit('display-question');
+      });
+
+      socket.on('new-user', data => {
+        let new_user = document.createElement('li');
+        let total_user = document.createElement('li');
+
+        document.getElementById('total_player').removeAttribute('hidden');
+
+        console.log(`${data.inst.user} just joined`);
+        users_stream.innerHTML = `There are currently ${Object.keys(data.users).length} players connected`
+      })
+
+
+      // math_iink.js script
+      document.getElementById("editor").style.border = "thick solid #0000FF";
+
+      const nextButton = document.createElement('button');
+      nextButton.id = 'nextButton';
+      nextButton.classList.add('classic-btn');
+      nextButton.innerHTML = 'Submit';
+
+
+      // export
+      // most code from https://github.com/MyScript/iinkJS/tree/master/examples/v4
+      const resultElement_export = document.getElementById('export-result');
+
+      const editorElement = document.getElementById('editor');
+      const questionElement = document.getElementById('question');
+      const resultElement = document.getElementById('result');
+      const nextDivElement = document.getElementById('nextDiv');
+
+      const exportElement = document.getElementById('exportContent');
+
+      const undoElement = document.getElementById('undo');
+      const redoElement = document.getElementById('redo');
+      const clearElement = document.getElementById('clear');
+
+
+      editorElement.addEventListener('changed', (event) => {
+        undoElement.disabled = !event.detail.canUndo;
+        redoElement.disabled = !event.detail.canRedo;
+        clearElement.disabled = event.detail.isEmpty;
+        exportElement.disabled = !event.detail.canExport;
+      });
+
+      // definining functions
+      function cleanLatex(latexExport) {
+        if (latexExport.includes('\\\\')) {
+          const steps = '\\begin{align*}' + latexExport + '\\end{align*}';
+          return steps.replace("\\begin{aligned}", "")
+            .replace("\\end{aligned}", "")
+            .replace(new RegExp("(align.{1})", "g"), "aligned");
+
+            console.log('cleanLatex return')
+        }
+        return latexExport
+          .replace(new RegExp("(align.{1})", "g"), "aligned");
+      }
+
+      // for displaying users answers under questions
+      const imp_equation_user = function (content_inp, green_red) {
+        const content = document.createElement('span');
+        content.textContent = content_inp;
+
+        const done = document.createElement('span')
+        const asyncTypeset = document.querySelector('#result')
+
+
+        console.log('imp_equation_user function')
+
+        // correct sol
+        if (green_red == 'green') {
+          done.textContent = '    Correct'
+
+          asyncTypeset.appendChild(content.cloneNode(true))
+          setTimeout(async function () {
+            await MathJax.typesetPromise()
+            asyncTypeset.appendChild(done.cloneNode(true))
+          })
+        // wrong sol
+        } else {
+          done.textContent = '    Not Correct'  
+    
+          asyncTypeset.appendChild(content.cloneNode(true))
+          setTimeout(async function () {
+            await MathJax.typesetPromise()
+            asyncTypeset.appendChild(done.cloneNode(true))
+          })
+        }
+      }
+      
+
+      // question from import
+      var question_display;
+      socket.on('display-question', (data) => {
+        question_display = data;
+        console.log(question_display)
+
+        // Loads init question
+        imp_equation()
+        console.log('load init question done')
+      })
+
+      // displaying math.jax
+      const imp_equation = function () {
+        console.log(`question_dis IMP - ${question_display}`)  
+
+        const asyncTypeset = document.querySelector('#question')
+        asyncTypeset.innerText = `${question_display[0]}`;
+        setTimeout(async function () {
+          await MathJax.typesetPromise()
+          console.log('typeset done')
+        })
+      }
+
+
+      
+      //console.log(question_display[1])
+
+      editorElement.addEventListener('exported', (evt) => {
+        console.log('editor element addEventListener ON')
+
+        const exports = evt.detail.exports;
+        if (exports && exports['application/x-latex']) {
+          katex.render(cleanLatex(exports['application/x-latex']),  resultElement);
+
+          console.log('editor element addEventListener WRITTING')
+
+          //export ans in latex in separate area for ans compar when clicked
+          exportElement.addEventListener('click', () => {
+            exportElement.disabled = true;
+            resultElement_export.innerHTML = '<span>' + JSON.stringify(evt.detail.exports['application/x-latex']) + '</span>';
+            editorElement.editor.export_();
+
+            console.log('editor element addEventListener EXPORTED')
+          });
+          exportedIsAnswer(exports);
+
+        } else {
+          resultElement.innerHTML = '';
+
+          console.log('editor element addEventListener CLEARED')
+        }
+      });
+
+    
+      nextButton.addEventListener('click', () => {
+        // ans stream add before question change
+        ans_stream_recog()
+      });
+      undoElement.addEventListener('click', () => {
+        editorElement.editor.undo();
+      });
+      redoElement.addEventListener('click', () => {
+        editorElement.editor.redo();
+      });
+      clearElement.addEventListener('click', () => {
+        editorElement.editor.clear();
+      });
+
+
+      function exportedIsAnswer(exports) {
+        console.log("export is answer function")
+
+
+        let export_recog = `${exports['application/x-latex']}`;
+        let q_ans_recog = `${question_display[1]}`;
+        if (export_recog == q_ans_recog) {
+          imp_equation_user(exports['application/x-latex'], 'green');
+          resultElement.style.cssText = "color: green;";
+          nextDivElement.appendChild(nextButton);
+        } else {
+          imp_equation_user(exports['application/x-latex'], 'red');
+          resultElement.style.cssText = "color: red;";
+          nextDivElement.innerHTML = '';
+        }
+      }
+      
+      const ans_stream_recog = async() => {
+        let current_user;
+        current_user = await return_username()
+
+        cor_ans = `${current_user} got solution`
+            
+        // Checks how to display math on answer stream
+        socket.emit('answer-user-recog', {
+          point_user: current_user,
+          user_score: 0
+        }); 
+
+        // updates everyone to next question
+        // 10s delay for others to put in solution
+        socket.emit('first-answer-check');
+        socket.on('first-answer-check', async (data) => {
+          socket.emit('music')
+          data_val = await data
+          console.log(data_val.data)
+          if (data_val.data == 'yes') {
+            console.log('IS first answer')
+            setTimeout(() => {
+              socket.emit('answer-correct')
+            }, 10000)
+          } else {
+            console.log('not first answer')
+          }
+        })
+
+        // change question border to red signify someone got ans and 10s countdown
+        //questionElement.style.border = 'red';
+        nextDivElement.innerHTML = '';
+      }
+      socket.on('music', () => {
+        game_audio.play()
+      })
+
+      // socket.emit('answer-correct') for next question and updates question-display here
+      socket.on('answer-correct', (data) => {
+        questionElement.innerHTML = '';
+        question_display = data;
+          
+        // console.log(question_display);  This shoots out the same q_dis the more as a person get? Browser problem?
+
+        // renders the new socket.on question from server array
+        imp_equation()
+        editorElement.editor.clear();
+        resultElement.innerHTML = '';
+        console.log('next question loaded')
+
+        socket.emit('reset-first-value');
+
+        // reset border color to neutral
+        //questionElement.style.border = 'lightblue';
+      })
+
+      // updates the scoreboard with players with point, no dups
+      socket.on('answer-user-recog', data => {
+        player = data.point_user;
+        // checks if the player already had a point, so update with new point
+        
+        if (document.getElementById(`${data.point_user}`)) {
+          cor_ans = document.getElementById(`${player}`)
+          cor_ans.innerText = `${player} has ${data.user_score} points`
+      
+        // else, add new li
+        } else {
+          let cor_ans = document.createElement('li');
+          cor_ans.id = `${player}`
+          cor_ans.innerText = `${player} just scored a point`
+
+          console.log(cor_ans)
+          stream.appendChild(cor_ans)
+        }
+      })
+
+
+      iink.register(editorElement, {
+        recognitionParams: {
+          type: 'MATH',
+          protocol: 'WEBSOCKET',
+          server: {
+            scheme: 'https',
+            host: 'cloud.myscript.com',
+            applicationKey: '7dedfc2e-f127-4b8d-a365-f758dbfb780b',
+            hmacKey: '6e72dd4e-901b-46a0-b0f7-2743d0db4d53'
+          },
+          iink: {
+            math: {
+              mimeTypes: ['application/x-latex', 'application/vnd.myscript.jiix']
+            },
+            export: {
+              jiix: {
+                strokes: true
+              }
+            }
+          }
+        }
+      });
+
+      window.addEventListener('resize', () => {
+        editorElement.editor.resize();
+      });
+
+    </script>
+  </body>
+</html>
