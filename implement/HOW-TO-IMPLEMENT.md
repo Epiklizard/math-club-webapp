@@ -39,4 +39,4 @@ Once you are ready with the configurations, go to the git bash and type (still s
 ```sh
 $ nodemon server.js
 ```
-NOW you can access the webapplication on 192.168.15.4:3000 for example.
+NOW you can access the webapplication on 192.168.15.4:3000 for example. To go into depth with code, navigate to the code-walkthrough .md files
