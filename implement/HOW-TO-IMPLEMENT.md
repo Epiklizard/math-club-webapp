@@ -15,4 +15,12 @@ Once we are in /Desktop or wherever, type in:
 ```sh
 $ git clone https://github.com/Epiklizard/math-club-webapp
 ```
-and you should have a folder 'math-club-webapp' on your current directory, navigate yourself into math-club-webapp/implement/ and you'd have the all the files needed to start the application
+and you should have a folder 'math-club-webapp' on your current directory, navigate yourself into math-club-webapp/implement/webapp-source and you'd have the all the files needed to start the application, copy them into a new folder (on Desktop) and cd into that folder.
+
+Once we have the git bash console in the new directory along all the files and folder (server.js, client_page.html, poly.js, and public/) in the same directory, it is time to install the nessecary modules:
+```sh
+$ npm init -y
+$ npm i express socket.io nodejs nodemon
+```
+That's it! You are ready to deploy on localhost:3000, this means that only your device can see it at the moment. To deploy for other interfaces in THE SAME LOCAL NETWORK, edit the server.js file on line
+
