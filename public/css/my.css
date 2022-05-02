@@ -1,0 +1,8 @@
+#scoreboard {
+    text-align: center;
+    border: 3px solid green;
+}
+
+#question, #edit_bar {
+    border:2px solid lightblue
+}
