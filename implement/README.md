@@ -26,9 +26,9 @@ Once we have the git bash console in the new directory along all the files and f
 $ npm init -y
 $ npm i express socket.io nodejs nodemon
 ```
-That's it! You are ready to deploy on localhost:3000, this means that only your device can see it at the moment. To deploy for other interfaces in THE SAME LOCAL NETWORK, edit the server.js file on line 141:
+That's it! You are ready to deploy on localhost:3000, this means that only your device can see it at the moment. To deploy for other interfaces in THE SAME LOCAL NETWORK, edit the server.js file on line 131:
 ```sh
-http.listen(3000, "INSERT YOUR IPv4 ADDRESS HERE WITHIN QUOTATION", () => {
+server.listen(3000, "INSERT YOUR IPv4 ADDRESS HERE WITHIN QUOTATION", () => {
     console.log('server live for your_ip_adress:3000')
 })
 ```
