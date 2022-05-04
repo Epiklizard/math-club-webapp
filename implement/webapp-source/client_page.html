@@ -6,8 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
     <!-- <script src="/socket.io/socket.io.js"></script> -->
-    <script src="public/js/socket.io.js"></script>
+    <!-- <script src="public/js/socket.io.js"></script> -->
 
     <!--For iink.js-->
     <link rel="stylesheet" href='public/css/math.css'>
@@ -43,7 +44,7 @@
 
 
   <body>
-    <h1>M-Comp App. test.ver 280422 MVP INCLUDING-ext-JSON-imp</h1>
+    <h1>M-Comp App. test.ver 040522 MVP INCLUDING-ext-JSON-imp</h1>
 
     <h3 id="username_h3">Username?</h3>
     <form id="form" action="">
@@ -103,7 +104,7 @@
 
 
     <script>
-      // Just local
+      // for multi-interfaces use const socket = io.connect('http://192.168.15.38'); replace with IPv4
       const socket = io();
       
         
@@ -124,11 +125,11 @@
       const return_username = async () => {
         return new Promise((res, rej) => {
           socket.emit('req-username', {
-          user_id: socket.id
+            user_id: socket.id
           });
           socket.on('req-username', data => {
-          console.log(data)
-          res(data)
+            console.log(data)
+            res(data)
           })
         })
       }
@@ -155,8 +156,32 @@
 
         document.getElementById('total_player').removeAttribute('hidden');
 
-        console.log(`${data.inst.user} just joined`);
-        users_stream.innerHTML = `There are currently ${Object.keys(data.users).length} players connected`
+
+        users_stream.innerHTML = `There are currently ${data.cur_player_count} players connected. (${Object.keys(data.users).length}) total visits`
+
+        // loops through already existing scoreboard to update new players
+        for (user_entries of data.users) {
+
+          player_name = user_entries.user_name;
+          player_point = user_entries.score;
+
+          if (document.getElementById(`${player_name}`)) {
+            cor_ans = document.getElementById(`${player_name}`)
+            cor_ans.innerText = `${player_name} has ${player_point} points`
+
+          } else if (player_point > 1) {
+            if (document.getElementById(`${player_name}`)) {
+              cor_ans = document.getElementById(`${player_name}`)
+              cor_ans.innerText = `${player_name} has ${player_point} points`
+            } else {
+              let cor_ans = document.createElement('li');
+              cor_ans.id = `${player_name}`
+              cor_ans.innerText = `${player_name} has ${player_point} points`
+
+              stream.appendChild(cor_ans)
+            }
+          }
+        }
       })
 
 
@@ -237,7 +262,6 @@
           })
         }
       }
-      
 
       // question from import
       var question_display;
@@ -248,6 +272,7 @@
         // Loads init question
         imp_equation()
         console.log('load init question done')
+
       })
 
       // displaying math.jax
@@ -348,7 +373,7 @@
             console.log('IS first answer')
             setTimeout(() => {
               socket.emit('answer-correct')
-            }, 10000)
+            }, 0)
           } else {
             console.log('not first answer')
           }
@@ -359,7 +384,7 @@
         nextDivElement.innerHTML = '';
       }
       socket.on('music', () => {
-        game_audio.play()
+        // game_audio.play()
       })
 
       // socket.emit('answer-correct') for next question and updates question-display here
@@ -386,7 +411,7 @@
         player = data.point_user;
         // checks if the player already had a point, so update with new point
         
-        if (document.getElementById(`${data.point_user}`)) {
+        if (document.getElementById(`${player}`)) {
           cor_ans = document.getElementById(`${player}`)
           cor_ans.innerText = `${player} has ${data.user_score} points`
       
@@ -398,10 +423,11 @@
 
           console.log(cor_ans)
           stream.appendChild(cor_ans)
+
         }
       })
 
-
+      // nessecary definition for handwritting recognision
       iink.register(editorElement, {
         recognitionParams: {
           type: 'MATH',
