@@ -1,18 +1,16 @@
 // importing nessecary modules
-const express = require('express');
 const { json } = require('express/lib/response');
-const app = express();
 const path = require('path')
+var fs = require('fs');
+var lis = JSON.parse(fs.readFileSync('./test.json', 'utf8'));
+console.log(lis)
 
 // setting up socket.io and creating server instance
+const express = require('express');
+const app = express();
 const http = require('http')
 const server = http.createServer(app);
 const io = require('socket.io')(server)
-
-var fs = require('fs');
-
-var lis = JSON.parse(fs.readFileSync('./test.json', 'utf8'));
-console.log(lis)
 
 
 // serves static files for webapp
@@ -25,7 +23,8 @@ app.get('/', (req, res) => {
 
 // global variables set
 var users = []
-var ran_num; 
+var cur_player_count = 0;
+var ran_num;
 // assign first_answer for check if the incoming answer socket is first or others (1 = first and any other num = not first).
 var first_answer = 0;
 
@@ -43,6 +42,7 @@ io.on('connection', (socket) => {
     // waits for client to emit() new-user data
     socket.on('new-user', (data) => {
         console.log(`socket_user_id: ${data.user_id}`)
+        cur_player_count += 1
         // add the data as an object to users list
         users.push({
             socket_id: data.user_id,
@@ -52,12 +52,13 @@ io.on('connection', (socket) => {
         // emit back same data for other client-side operations
         io.emit('new-user', {
             inst: data,
-            users: users
+            users: users,
+            cur_player_count: cur_player_count
         });
         console.log(users);
     });
 
-    // init question
+    // initial question
     var question_dis = lis[ran_num];
  
     socket.on('display-question', () => {
@@ -70,17 +71,16 @@ io.on('connection', (socket) => {
             if (users_entry.socket_id == data.user_id) {
                 //console.log(users_entry.user_name)
                 socket.emit('req-username', users_entry.user_name)
-            } else {
-                console.log('THROW ERR NO USER IN ARR')
             }
         }
     })
 
     // point system and updates list for ALL answers
     socket.on('answer-user-recog', data => {
-        // first person answered
+        // Point progression 
         first_answer += 1;
         console.log(`new answer, f_ans val = ${first_answer}`)
+        
         for (let users_entry of users) {
             if (users_entry.user_name == data.point_user) {
                 users_entry.score += 1
@@ -91,9 +91,7 @@ io.on('connection', (socket) => {
                     point_user: data.point_user,
                     user_score: users_entry.score
                 })
-            } else {
-                console.log('THROW ERR ON SERVER SCORE SYS')
-            };
+            }
         };
     });
 
@@ -109,7 +107,7 @@ io.on('connection', (socket) => {
     // when someone gets answer correct
     socket.on('answer-correct', () => {
         // removes the answered question from array
-        lis.splice(ran_num, 1);
+        // lis.splice(ran_num, 1); commented this out for testing and looped gameplay
         getRandomInt();
         // emit new random question from array
         io.sockets.emit('answer-correct', lis[ran_num])
@@ -123,11 +121,11 @@ io.on('connection', (socket) => {
     // loading new round, so reset first_answer value to 0
     socket.on('reset-first-value', () => {
         first_answer = 0
-        console.log(`reseted round, f_ans val = ${first_answer}`)
     });
 
     socket.on('disconnect', (socket) => {
         console.log('user disconnected');
+        cur_player_count -= 1;
     });
 });
 
