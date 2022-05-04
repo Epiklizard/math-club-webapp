@@ -1,28 +1,20 @@
-// Importing nessecary modules
+// importing nessecary modules
 const express = require('express');
 const { json } = require('express/lib/response');
 const app = express();
 const path = require('path')
-const fs = require('fs');
 
-// creating Server instance
-const http = require('http').Server(app);
-const cors = require('cors');
+// setting up socket.io and creating server instance
+const http = require('http')
+const server = http.createServer(app);
+const io = require('socket.io')(server)
 
-// CORS for crossing HTTP with HTTPS
-const io = require('socket.io')(http, {
-    cors: {
-        origin: "*"
-    }
-});
+var fs = require('fs');
 
-// Parse questions JSON file
-var lis = JSON.parse(fs.readFileSync('./poly.json', 'utf8'));
+var lis = JSON.parse(fs.readFileSync('./test.json', 'utf8'));
 console.log(lis)
 
 
-// resolves COR problem when accessing webapp from internet
-app.use(cors())
 // serves static files for webapp
 app.use('/public', express.static(__dirname + '/public'));
 // routing, sends the client_page when entered correct address
@@ -124,7 +116,8 @@ io.on('connection', (socket) => {
     });
     
     socket.on('music', () => {
-        io.sockets.emit('music')
+        // turn off this feature for testing cause it is loud
+        // io.sockets.emit('music')
     })
 
     // loading new round, so reset first_answer value to 0
@@ -138,6 +131,6 @@ io.on('connection', (socket) => {
     });
 });
 
-http.listen(3000, () => {
+server.listen(3000, () => {
     console.log('server live for localhost:3000')
 })
