@@ -16,6 +16,9 @@ Once we are in Desktop/ , type in:
 $ git clone https://github.com/Epiklizard/math-club-webapp
 ```
 and you should have a folder 'math-club-webapp' on your current directory, navigate yourself into math-club-webapp/implement/webapp-source and you'd have the all the files needed to start the application, copy them into a new folder (on Desktop) and cd into that folder.
+```sh
+$ cd MyNewFolder
+```
 
 ## Starting up the application
 Once we have the git bash console in the new directory along all the files and folder (server.js, client_page.html, test.js, and public/) in the same directory, it is time to install the nessecary modules:
