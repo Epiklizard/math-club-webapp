@@ -17,7 +17,7 @@ $ git clone https://github.com/Epiklizard/math-club-webapp
 ```
 and you should have a folder 'math-club-webapp' on your current directory, navigate yourself into math-club-webapp/implement/webapp-source and you'd have the all the files needed to start the application, copy them into a new folder (on Desktop) and cd into that folder.
 ```sh
-$ cd MyNewFolder
+$ cd math-club-webapp
 ```
 
 ## Starting up the application
