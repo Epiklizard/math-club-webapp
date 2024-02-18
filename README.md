@@ -6,3 +6,7 @@ There are two files that this repo is going into details, server.js and client_p
 ## How to navigate
 - If you only care about the application and want to start a local web that is interactive with other devices on the same local area network, go to implement/ folder
 - If you would like to go in depth with the code and how client and server communicates, go to code-walkthrough/ and read the two .md files
+
+
+18/02/2024 note:
+codebase is actually pretty bad, making it harder by not using bootstrap or alternatives for UIs and using sockets instead of POST and GETs. So all of above is just a marker for my own skill and I can look back with amusement.
